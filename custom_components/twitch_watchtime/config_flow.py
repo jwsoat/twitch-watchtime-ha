@@ -15,6 +15,7 @@ from .api import (
     TwitchWatchtimeAuthError,
     TwitchWatchtimeClient,
     TwitchWatchtimeConnectionError,
+    _normalize_host,
 )
 from .const import (
     CONF_API_KEY,
@@ -53,7 +54,7 @@ class TwitchWatchtimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST].rstrip("/")
+            host = _normalize_host(user_input[CONF_HOST])
             api_key = user_input[CONF_API_KEY]
             session = async_get_clientsession(self.hass)
             client = TwitchWatchtimeClient(host=host, api_key=api_key, session=session)

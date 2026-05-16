@@ -15,6 +15,14 @@ import aiohttp
 _LOGGER = logging.getLogger(__name__)
 
 
+def _normalize_host(host: str) -> str:
+    """Accept "1.2.3.4:8765", "http://...", or "https://..." and return a usable base URL."""
+    h = host.strip().rstrip("/")
+    if not h.startswith(("http://", "https://")):
+        h = f"http://{h}"
+    return h
+
+
 class TwitchWatchtimeError(Exception):
     """Base error for the client."""
 
@@ -37,7 +45,7 @@ class TwitchWatchtimeClient:
         api_key: str,
         session: aiohttp.ClientSession,
     ) -> None:
-        self._host = host.rstrip("/")
+        self._host = _normalize_host(host)
         self._headers = {"X-API-Key": api_key}
         self._session = session
 
