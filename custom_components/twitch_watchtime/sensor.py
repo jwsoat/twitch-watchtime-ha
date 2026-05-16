@@ -3,14 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTime
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -86,9 +81,7 @@ class _BaseWatchtimeEntity(CoordinatorEntity[TwitchWatchtimeCoordinator]):
 class WatchtimeDurationSensor(_BaseWatchtimeEntity, SensorEntity):
     """today / week / all duration sensors."""
 
-    _attr_device_class = SensorDeviceClass.DURATION
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_icon = "mdi:timer-outline"
 
     def __init__(
         self,
@@ -100,14 +93,18 @@ class WatchtimeDurationSensor(_BaseWatchtimeEntity, SensorEntity):
         super().__init__(coordinator, entry, window, name)
         self._window = window
 
-    @property
-    def native_value(self) -> int:
+    def _seconds(self) -> int:
         return int(self.coordinator.data.get(f"{self._window}_seconds", 0))
+
+    @property
+    def native_value(self) -> str:
+        return _fmt_duration(self._seconds())
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         data = self.coordinator.data
-        attrs: dict[str, Any] = {"formatted": _fmt_duration(self.native_value)}
+        seconds = self._seconds()
+        attrs: dict[str, Any] = {"seconds": seconds}
         if self._window == "today":
             attrs["top_channel"] = data.get("top_channel")
             attrs["top_channel_seconds"] = data.get("top_channel_seconds", 0)
