@@ -2,3 +2,6 @@ pytest==8.3.3
 pytest-asyncio==0.24.0
 pytest-homeassistant-custom-component==0.13.180
 aioresponses==0.7.7
+# josepy 2.x removed ComparableX509 which the pinned acme==2.11.0 still imports.
+# HA Core 2024.11 hasn't updated the chain yet; pin <2 for now.
+josepy<2
