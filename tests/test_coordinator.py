@@ -29,6 +29,12 @@ SNAPSHOT = {
         "title": "test stream",
         "twitch_user": "jwsoat",
     },
+    "top_category_today": "Just Chatting",
+    "top_category_today_seconds": 900,
+    "top_category_week": "Just Chatting",
+    "top_category_week_seconds": 4500,
+    "top_category_all": "League of Legends",
+    "top_category_all_seconds": 200000,
 }
 
 

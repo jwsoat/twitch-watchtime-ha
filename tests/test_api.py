@@ -87,6 +87,15 @@ async def test_fetch_snapshot_merges_five_endpoints() -> None:
                 "ts": 1700000000, "channel": "cinna", "category": "Just Chatting",
                 "title": "stream title", "twitch_user": None,
             })
+            m.get(f"{HOST}/stats/categories?window=today", payload={"categories": [
+                {"category": "Just Chatting", "seconds": 900},
+            ]})
+            m.get(f"{HOST}/stats/categories?window=week", payload={"categories": [
+                {"category": "Just Chatting", "seconds": 4500},
+            ]})
+            m.get(f"{HOST}/stats/categories?window=all", payload={"categories": [
+                {"category": "League of Legends", "seconds": 200000},
+            ]})
             snap = await client.async_fetch_snapshot(user=None)
             assert snap == {
                 "today_seconds": 1800,
@@ -98,6 +107,12 @@ async def test_fetch_snapshot_merges_five_endpoints() -> None:
                     "ts": 1700000000, "channel": "cinna", "category": "Just Chatting",
                     "title": "stream title", "twitch_user": None,
                 },
+                "top_category_today": "Just Chatting",
+                "top_category_today_seconds": 900,
+                "top_category_week": "Just Chatting",
+                "top_category_week_seconds": 4500,
+                "top_category_all": "League of Legends",
+                "top_category_all_seconds": 200000,
             }
     finally:
         await session.close()
@@ -112,10 +127,15 @@ async def test_fetch_snapshot_passes_user_param_when_set() -> None:
             m.get(f"{HOST}/stats/total?window=all&user=jwsoat", payload={"window": "all", "seconds": 60})
             m.get(f"{HOST}/stats/top_channel?window=today&user=jwsoat", payload={"channel": None, "seconds": 0})
             m.get(f"{HOST}/stats/now?user=jwsoat", payload={"now": None})
+            m.get(f"{HOST}/stats/categories?window=today&user=jwsoat", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?window=week&user=jwsoat", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?window=all&user=jwsoat", payload={"categories": []})
             snap = await client.async_fetch_snapshot(user="jwsoat")
             assert snap["today_seconds"] == 60
             assert snap["top_channel"] is None
             assert snap["now"] is None
+            assert snap["top_category_today"] is None
+            assert snap["top_category_today_seconds"] == 0
     finally:
         await session.close()
 
@@ -130,6 +150,9 @@ async def test_fetch_snapshot_normalizes_stats_now_null_shape() -> None:
             m.get(f"{HOST}/stats/total?window=all", payload={"window": "all", "seconds": 0})
             m.get(f"{HOST}/stats/top_channel?window=today", payload={"channel": None, "seconds": 0})
             m.get(f"{HOST}/stats/now", payload={"now": None})
+            m.get(f"{HOST}/stats/categories?window=today", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?window=week", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?window=all", payload={"categories": []})
             snap = await client.async_fetch_snapshot(user=None)
             assert snap["now"] is None
     finally:

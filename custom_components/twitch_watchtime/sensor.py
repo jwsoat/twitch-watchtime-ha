@@ -50,6 +50,9 @@ async def async_setup_entry(
         WatchtimeDurationSensor(coordinator, entry, "all", "Watchtime all"),
         WatchtimeNowWatchingSensor(coordinator, entry),
         WatchtimeTopChannelSensor(coordinator, entry),
+        WatchtimeTopCategorySensor(coordinator, entry, "today", "Watchtime top category today"),
+        WatchtimeTopCategorySensor(coordinator, entry, "week", "Watchtime top category week"),
+        WatchtimeTopCategorySensor(coordinator, entry, "all", "Watchtime top category all"),
     ]
     if entry.data[CONF_USER] != USER_ALL:
         entities += [
@@ -207,4 +210,29 @@ class WatchtimeTopChannelSensor(_BaseWatchtimeEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         seconds = int(self.coordinator.data.get("top_channel_seconds", 0))
+        return {"seconds": seconds, "formatted": _fmt_duration(seconds)}
+
+
+class WatchtimeTopCategorySensor(_BaseWatchtimeEntity, SensorEntity):
+    """Top category for a window (today / week / all)."""
+
+    _attr_icon = "mdi:shape"
+
+    def __init__(
+        self,
+        coordinator: TwitchWatchtimeCoordinator,
+        entry: ConfigEntry,
+        window: str,
+        name: str,
+    ) -> None:
+        super().__init__(coordinator, entry, f"top_category_{window}", name)
+        self._window = window
+
+    @property
+    def native_value(self) -> str:
+        return self.coordinator.data.get(f"top_category_{self._window}") or "none"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        seconds = int(self.coordinator.data.get(f"top_category_{self._window}_seconds", 0))
         return {"seconds": seconds, "formatted": _fmt_duration(seconds)}

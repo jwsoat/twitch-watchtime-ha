@@ -88,6 +88,18 @@ class TwitchWatchtimeClient:
         data = await self._get("/stats/channel", params=params)
         return int(data.get("seconds", 0))
 
+    async def async_get_top_category(self, *, window: str, user: str | None) -> dict[str, Any]:
+        """Return the #1 category for the window, or {'category': None, 'seconds': 0}."""
+        params: dict[str, str] = {"window": window}
+        if user:
+            params["user"] = user
+        data = await self._get("/stats/categories", params=params)
+        cats = data.get("categories") or []
+        if not cats:
+            return {"category": None, "seconds": 0}
+        top = cats[0]
+        return {"category": top.get("category"), "seconds": int(top.get("seconds", 0))}
+
     async def async_fetch_snapshot(self, *, user: str | None) -> dict[str, Any]:
         """Run the five tick calls in parallel and merge into a coordinator-shaped dict.
 
@@ -98,12 +110,19 @@ class TwitchWatchtimeClient:
         params_week = {"window": "week", **(params_user or {})}
         params_all = {"window": "all", **(params_user or {})}
 
-        today, top, week, all_time, now = await asyncio.gather(
+        params_cat_today = {"window": "today", **(params_user or {})}
+        params_cat_week = {"window": "week", **(params_user or {})}
+        params_cat_all = {"window": "all", **(params_user or {})}
+
+        today, top, week, all_time, now, cat_today, cat_week, cat_all = await asyncio.gather(
             self._get("/stats/total", params=params_today),
             self._get("/stats/top_channel", params=params_today),
             self._get("/stats/total", params=params_week),
             self._get("/stats/total", params=params_all),
             self._get("/stats/now", params=params_user),
+            self._get("/stats/categories", params=params_cat_today),
+            self._get("/stats/categories", params=params_cat_week),
+            self._get("/stats/categories", params=params_cat_all),
         )
 
         # /stats/now returns either {"now": None} or {"ts": ..., "channel": ..., ...}
@@ -113,6 +132,17 @@ class TwitchWatchtimeClient:
         else:
             now_value = now
 
+        def _pick_top_cat(data: Any) -> tuple[str | None, int]:
+            cats = (data or {}).get("categories") or []
+            if not cats:
+                return None, 0
+            first = cats[0]
+            return first.get("category"), int(first.get("seconds", 0))
+
+        tc_today_name, tc_today_sec = _pick_top_cat(cat_today)
+        tc_week_name, tc_week_sec = _pick_top_cat(cat_week)
+        tc_all_name, tc_all_sec = _pick_top_cat(cat_all)
+
         return {
             "today_seconds": int(today.get("seconds", 0)),
             "week_seconds": int(week.get("seconds", 0)),
@@ -120,4 +150,10 @@ class TwitchWatchtimeClient:
             "top_channel": top.get("channel"),
             "top_channel_seconds": int(top.get("seconds", 0)),
             "now": now_value,
+            "top_category_today": tc_today_name,
+            "top_category_today_seconds": tc_today_sec,
+            "top_category_week": tc_week_name,
+            "top_category_week_seconds": tc_week_sec,
+            "top_category_all": tc_all_name,
+            "top_category_all_seconds": tc_all_sec,
         }
