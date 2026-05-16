@@ -54,12 +54,11 @@ async def async_setup_entry(
         WatchtimeTopCategorySensor(coordinator, entry, "week", "Watchtime top category week"),
         WatchtimeTopCategorySensor(coordinator, entry, "all", "Watchtime top category all"),
     ]
-    if entry.data[CONF_USER] != USER_ALL:
-        entities += [
-            WatchtimeCurrentChannelTodaySensor(coordinator, entry),
-            WatchtimeCurrentChannelWindowSensor(coordinator, entry, "week", "now_channel_week_seconds", "Watchtime current channel week"),
-            WatchtimeCurrentChannelWindowSensor(coordinator, entry, "all", "now_channel_all_seconds", "Watchtime current channel all time"),
-        ]
+    entities += [
+        WatchtimeCurrentChannelTodaySensor(coordinator, entry),
+        WatchtimeCurrentChannelWindowSensor(coordinator, entry, "week", "now_channel_week_seconds", "Watchtime current channel week"),
+        WatchtimeCurrentChannelWindowSensor(coordinator, entry, "all", "now_channel_all_seconds", "Watchtime current channel all time"),
+    ]
     async_add_entities(entities)
 
 
