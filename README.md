@@ -5,16 +5,50 @@ Home Assistant custom integration for the self-hosted
 Twitch watch time per account and exposes it as Home Assistant sensors you can
 graph, automate, and put on a dashboard.
 
-## What you get (per Twitch account)
+## What you get (per entry)
+
+### Watch time totals
 
 | Entity | What |
 |---|---|
-| `sensor.<prefix>_watchtime_today` | seconds watched today (state class `total_increasing`) |
-| `sensor.<prefix>_watchtime_week` | seconds watched in the last 7 days |
-| `sensor.<prefix>_watchtime_all` | total seconds watched all-time |
-| `sensor.<prefix>_watchtime_now_watching` | current channel name, or `idle` |
-| `sensor.<prefix>_watchtime_top_channel` | the channel with the most watch time today |
+| `sensor.<prefix>_watchtime_today` | Total watch time today |
+| `sensor.<prefix>_watchtime_week` | Total watch time this week |
+| `sensor.<prefix>_watchtime_month` | Total watch time this month |
+| `sensor.<prefix>_watchtime_all` | Total watch time all-time |
+
+### Top channel
+
+| Entity | What |
+|---|---|
+| `sensor.<prefix>_top_channel_daily` | Most-watched channel today |
+| `sensor.<prefix>_top_channel_weekly` | Most-watched channel this week |
+| `sensor.<prefix>_top_channel_monthly` | Most-watched channel this month |
+| `sensor.<prefix>_top_channel_all_time` | Most-watched channel all-time |
+
+### Top category
+
+| Entity | What |
+|---|---|
+| `sensor.<prefix>_watchtime_top_category_today` | Most-watched category today |
+| `sensor.<prefix>_watchtime_top_category_week` | Most-watched category this week |
+| `sensor.<prefix>_watchtime_top_category_month` | Most-watched category this month |
+| `sensor.<prefix>_watchtime_top_category_all` | Most-watched category all-time |
+
+### Live status
+
+| Entity | What |
+|---|---|
+| `sensor.<prefix>_watchtime_now_watching` | Current channel name, or `idle` |
 | `binary_sensor.<prefix>_watchtime_active` | `on` whenever the backend saw a heartbeat in the last 2 minutes |
+
+### Current channel (per-user entries only)
+
+| Entity | What |
+|---|---|
+| `sensor.<prefix>_watchtime_current_channel_today` | Time watched today on the active channel |
+| `sensor.<prefix>_watchtime_current_channel_week` | Time watched this week on the active channel |
+| `sensor.<prefix>_watchtime_current_channel_month` | Time watched this month on the active channel |
+| `sensor.<prefix>_watchtime_current_channel_all_time` | All-time watch time on the active channel |
 
 `<prefix>` is the Twitch login (or `all_accounts` if the entry is set to pool everything).
 
