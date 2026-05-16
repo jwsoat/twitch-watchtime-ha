@@ -47,14 +47,21 @@ class TwitchWatchtimeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 now = snapshot.get("now")
                 channel = now.get("channel") if now else None
                 if channel:
-                    try:
-                        snapshot["now_channel_today_seconds"] = await self._client.async_get_channel_today(
-                            channel=channel, user=self._user
-                        )
-                    except TwitchWatchtimeError:
-                        snapshot["now_channel_today_seconds"] = 0
+                    for key, window in (
+                        ("now_channel_today_seconds", "today"),
+                        ("now_channel_week_seconds", "week"),
+                        ("now_channel_all_seconds", "all"),
+                    ):
+                        try:
+                            snapshot[key] = await self._client.async_get_channel_today(
+                                channel=channel, user=self._user, window=window
+                            )
+                        except TwitchWatchtimeError:
+                            snapshot[key] = 0
                 else:
                     snapshot["now_channel_today_seconds"] = 0
+                    snapshot["now_channel_week_seconds"] = 0
+                    snapshot["now_channel_all_seconds"] = 0
             return snapshot
         except TwitchWatchtimeAuthError as err:
             raise ConfigEntryAuthFailed(str(err)) from err

@@ -72,9 +72,9 @@ class TwitchWatchtimeClient:
         data = await self._get("/stats/users")
         return list(data.get("users", []))
 
-    async def async_get_channel_today(self, *, channel: str, user: str | None) -> int:
-        """Return seconds watched for channel today."""
-        params: dict[str, str] = {"channel": channel, "window": "today"}
+    async def async_get_channel_today(self, *, channel: str, user: str | None, window: str = "today") -> int:
+        """Return seconds watched for channel in the given window."""
+        params: dict[str, str] = {"channel": channel, "window": window}
         if user:
             params["user"] = user
         data = await self._get("/stats/channel", params=params)

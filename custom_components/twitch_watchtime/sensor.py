@@ -52,7 +52,11 @@ async def async_setup_entry(
         WatchtimeTopChannelSensor(coordinator, entry),
     ]
     if entry.data[CONF_USER] != USER_ALL:
-        entities.append(WatchtimeCurrentChannelTodaySensor(coordinator, entry))
+        entities += [
+            WatchtimeCurrentChannelTodaySensor(coordinator, entry),
+            WatchtimeCurrentChannelWindowSensor(coordinator, entry, "week", "now_channel_week_seconds", "Watchtime current channel week"),
+            WatchtimeCurrentChannelWindowSensor(coordinator, entry, "all", "now_channel_all_seconds", "Watchtime current channel all time"),
+        ]
     async_add_entities(entities)
 
 
@@ -156,10 +160,36 @@ class WatchtimeCurrentChannelTodaySensor(_BaseWatchtimeEntity, SensorEntity):
         data = self.coordinator.data
         now = data.get("now") or {}
         seconds = int(data.get("now_channel_today_seconds", 0))
-        return {
-            "channel": now.get("channel"),
-            "seconds": seconds,
-        }
+        return {"channel": now.get("channel"), "seconds": seconds}
+
+
+class WatchtimeCurrentChannelWindowSensor(_BaseWatchtimeEntity, SensorEntity):
+    """Time watched in a window for the currently active channel."""
+
+    _attr_icon = "mdi:timer-play-outline"
+
+    def __init__(
+        self,
+        coordinator: TwitchWatchtimeCoordinator,
+        entry: ConfigEntry,
+        window: str,
+        data_key: str,
+        name: str,
+    ) -> None:
+        super().__init__(coordinator, entry, f"now_channel_{window}", name)
+        self._data_key = data_key
+
+    @property
+    def native_value(self) -> str:
+        seconds = int(self.coordinator.data.get(self._data_key, 0))
+        return _fmt_duration(seconds)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        data = self.coordinator.data
+        now = data.get("now") or {}
+        seconds = int(data.get(self._data_key, 0))
+        return {"channel": now.get("channel"), "seconds": seconds}
 
 
 class WatchtimeTopChannelSensor(_BaseWatchtimeEntity, SensorEntity):
