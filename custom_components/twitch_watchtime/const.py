@@ -22,7 +22,7 @@ OPT_IDLE_TIMEOUT = "idle_timeout"
 # Defaults
 DEFAULT_SCAN_INTERVAL = 60  # seconds
 DEFAULT_IDLE_TIMEOUT = 120  # seconds — matches the API's /stats/now window
-MIN_SCAN_INTERVAL = 15
+MIN_SCAN_INTERVAL = 10
 MAX_SCAN_INTERVAL = 600
 
 # Manufacturer/model strings shown in HA device info
