@@ -1,0 +1,13 @@
+{
+  "domain": "twitch_watchtime",
+  "name": "Twitch Watchtime",
+  "codeowners": ["@jwsoat"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/jwsoat/twitch-watchtime-ha",
+  "iot_class": "local_polling",
+  "integration_type": "service",
+  "issue_tracker": "https://github.com/jwsoat/twitch-watchtime-ha/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
