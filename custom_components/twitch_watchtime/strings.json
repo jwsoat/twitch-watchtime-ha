@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to your watchtime backend",
+        "description": "Paste the URL of your FastAPI backend and the API key.",
+        "data": {
+          "host": "Host URL",
+          "api_key": "API key"
+        }
+      },
+      "account": {
+        "title": "Choose an account to track",
+        "description": "Pick the Twitch login this entry should follow, or 'All accounts' to pool everything.",
+        "data": {
+          "user": "Account"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Couldn't reach the backend.",
+      "invalid_auth": "API key was rejected.",
+      "unknown": "Unexpected error — check Home Assistant logs."
+    },
+    "abort": {
+      "already_configured": "This account is already configured on this host."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "scan_interval": "Scan interval (seconds)",
+          "idle_timeout": "Idle timeout (seconds)"
+        }
+      }
+    }
+  }
+}
