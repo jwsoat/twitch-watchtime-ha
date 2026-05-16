@@ -13,6 +13,7 @@ from .api import (
     TwitchWatchtimeAuthError,
     TwitchWatchtimeClient,
     TwitchWatchtimeConnectionError,
+    TwitchWatchtimeError,
 )
 from .const import DOMAIN
 
@@ -46,9 +47,12 @@ class TwitchWatchtimeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 now = snapshot.get("now")
                 channel = now.get("channel") if now else None
                 if channel:
-                    snapshot["now_channel_today_seconds"] = await self._client.async_get_channel_today(
-                        channel=channel, user=self._user
-                    )
+                    try:
+                        snapshot["now_channel_today_seconds"] = await self._client.async_get_channel_today(
+                            channel=channel, user=self._user
+                        )
+                    except TwitchWatchtimeError:
+                        snapshot["now_channel_today_seconds"] = 0
                 else:
                     snapshot["now_channel_today_seconds"] = 0
             return snapshot
