@@ -20,7 +20,7 @@ OPT_SCAN_INTERVAL = "scan_interval"
 OPT_IDLE_TIMEOUT = "idle_timeout"
 
 # Defaults
-DEFAULT_SCAN_INTERVAL = 60  # seconds
+DEFAULT_SCAN_INTERVAL = 10  # seconds — matches the backend heartbeat cadence
 DEFAULT_IDLE_TIMEOUT = 120  # seconds — matches the API's /stats/now window
 MIN_SCAN_INTERVAL = 10
 MAX_SCAN_INTERVAL = 600

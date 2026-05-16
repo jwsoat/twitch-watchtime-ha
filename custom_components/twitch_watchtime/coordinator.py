@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the twitch_watchtime integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import timedelta
 from typing import Any
@@ -46,22 +47,26 @@ class TwitchWatchtimeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if self._user is not None:
                 now = snapshot.get("now")
                 channel = now.get("channel") if now else None
+                windows = (
+                    ("now_channel_today_seconds", "today"),
+                    ("now_channel_week_seconds", "week"),
+                    ("now_channel_all_seconds", "all"),
+                )
                 if channel:
-                    for key, window in (
-                        ("now_channel_today_seconds", "today"),
-                        ("now_channel_week_seconds", "week"),
-                        ("now_channel_all_seconds", "all"),
-                    ):
-                        try:
-                            snapshot[key] = await self._client.async_get_channel_today(
+                    results = await asyncio.gather(
+                        *(
+                            self._client.async_get_channel_today(
                                 channel=channel, user=self._user, window=window
                             )
-                        except TwitchWatchtimeError:
-                            snapshot[key] = 0
+                            for _, window in windows
+                        ),
+                        return_exceptions=True,
+                    )
+                    for (key, _), result in zip(windows, results):
+                        snapshot[key] = 0 if isinstance(result, BaseException) else result
                 else:
-                    snapshot["now_channel_today_seconds"] = 0
-                    snapshot["now_channel_week_seconds"] = 0
-                    snapshot["now_channel_all_seconds"] = 0
+                    for key, _ in windows:
+                        snapshot[key] = 0
             return snapshot
         except TwitchWatchtimeAuthError as err:
             raise ConfigEntryAuthFailed(str(err)) from err
