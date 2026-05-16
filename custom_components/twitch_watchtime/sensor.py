@@ -49,16 +49,19 @@ async def async_setup_entry(
         WatchtimeDurationSensor(coordinator, entry, "week", "Watchtime week"),
         WatchtimeDurationSensor(coordinator, entry, "all", "Watchtime all"),
         WatchtimeNowWatchingSensor(coordinator, entry),
-        WatchtimeTopChannelSensor(coordinator, entry),
+        WatchtimeTopChannelSensor(coordinator, entry, "today", "Watchtime top channel"),
+        WatchtimeTopChannelSensor(coordinator, entry, "week", "Watchtime top channel week"),
+        WatchtimeTopChannelSensor(coordinator, entry, "all", "Watchtime top channel all time"),
         WatchtimeTopCategorySensor(coordinator, entry, "today", "Watchtime top category today"),
         WatchtimeTopCategorySensor(coordinator, entry, "week", "Watchtime top category week"),
         WatchtimeTopCategorySensor(coordinator, entry, "all", "Watchtime top category all"),
     ]
-    entities += [
-        WatchtimeCurrentChannelTodaySensor(coordinator, entry),
-        WatchtimeCurrentChannelWindowSensor(coordinator, entry, "week", "now_channel_week_seconds", "Watchtime current channel week"),
-        WatchtimeCurrentChannelWindowSensor(coordinator, entry, "all", "now_channel_all_seconds", "Watchtime current channel all time"),
-    ]
+    if entry.data[CONF_USER] != USER_ALL:
+        entities += [
+            WatchtimeCurrentChannelTodaySensor(coordinator, entry),
+            WatchtimeCurrentChannelWindowSensor(coordinator, entry, "week", "now_channel_week_seconds", "Watchtime current channel week"),
+            WatchtimeCurrentChannelWindowSensor(coordinator, entry, "all", "now_channel_all_seconds", "Watchtime current channel all time"),
+        ]
     async_add_entities(entities)
 
 
@@ -195,20 +198,30 @@ class WatchtimeCurrentChannelWindowSensor(_BaseWatchtimeEntity, SensorEntity):
 
 
 class WatchtimeTopChannelSensor(_BaseWatchtimeEntity, SensorEntity):
-    """Top channel today (string)."""
+    """Top channel for a window (today / week / all)."""
 
     _attr_icon = "mdi:crown"
 
-    def __init__(self, coordinator: TwitchWatchtimeCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator, entry, "top_channel", "Watchtime top channel")
+    def __init__(
+        self,
+        coordinator: TwitchWatchtimeCoordinator,
+        entry: ConfigEntry,
+        window: str,
+        name: str,
+    ) -> None:
+        # today keeps the legacy key so existing entity IDs are preserved
+        key = "top_channel" if window == "today" else f"top_channel_{window}"
+        super().__init__(coordinator, entry, key, name)
+        self._channel_key = key
+        self._seconds_key = "top_channel_seconds" if window == "today" else f"top_channel_{window}_seconds"
 
     @property
     def native_value(self) -> str:
-        return self.coordinator.data.get("top_channel") or "none"
+        return self.coordinator.data.get(self._channel_key) or "none"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        seconds = int(self.coordinator.data.get("top_channel_seconds", 0))
+        seconds = int(self.coordinator.data.get(self._seconds_key, 0))
         return {"seconds": seconds, "formatted": _fmt_duration(seconds)}
 
 

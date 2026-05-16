@@ -114,9 +114,15 @@ class TwitchWatchtimeClient:
         params_cat_week = {"window": "week", **(params_user or {})}
         params_cat_all = {"window": "all", **(params_user or {})}
 
-        today, top, week, all_time, now, cat_today, cat_week, cat_all = await asyncio.gather(
+        (
+            today, top_today, top_week, top_all,
+            week, all_time, now,
+            cat_today, cat_week, cat_all,
+        ) = await asyncio.gather(
             self._get("/stats/total", params=params_today),
             self._get("/stats/top_channel", params=params_today),
+            self._get("/stats/top_channel", params=params_week),
+            self._get("/stats/top_channel", params=params_all),
             self._get("/stats/total", params=params_week),
             self._get("/stats/total", params=params_all),
             self._get("/stats/now", params=params_user),
@@ -147,8 +153,12 @@ class TwitchWatchtimeClient:
             "today_seconds": int(today.get("seconds", 0)),
             "week_seconds": int(week.get("seconds", 0)),
             "all_seconds": int(all_time.get("seconds", 0)),
-            "top_channel": top.get("channel"),
-            "top_channel_seconds": int(top.get("seconds", 0)),
+            "top_channel": top_today.get("channel"),
+            "top_channel_seconds": int(top_today.get("seconds", 0)),
+            "top_channel_week": top_week.get("channel"),
+            "top_channel_week_seconds": int(top_week.get("seconds", 0)),
+            "top_channel_all": top_all.get("channel"),
+            "top_channel_all_seconds": int(top_all.get("seconds", 0)),
             "now": now_value,
             "top_category_today": tc_today_name,
             "top_category_today_seconds": tc_today_sec,

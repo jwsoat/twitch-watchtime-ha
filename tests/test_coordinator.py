@@ -22,6 +22,10 @@ SNAPSHOT = {
     "all_seconds": 360000,
     "top_channel": "cinna",
     "top_channel_seconds": 1200,
+    "top_channel_week": "cinna",
+    "top_channel_week_seconds": 5000,
+    "top_channel_all": "cinna",
+    "top_channel_all_seconds": 280000,
     "now": {
         "ts": 1700000000,
         "channel": "cinna",
@@ -49,28 +53,26 @@ def _mock_client(snapshot=None, raises=None, channel_seconds=600):
 
 
 async def test_coordinator_returns_snapshot_on_success(hass: HomeAssistant) -> None:
-    client = _mock_client(channel_seconds=600)
+    client = _mock_client()
     coord = TwitchWatchtimeCoordinator(
         hass, client=client, user="jwsoat", scan_interval=timedelta(seconds=60)
     )
     data = await coord._async_update_data()
     assert data["today_seconds"] == SNAPSHOT["today_seconds"]
-    assert data["now_channel_today_seconds"] == 600
-    assert data["now_channel_week_seconds"] == 600
-    assert data["now_channel_all_seconds"] == 600
+    assert data["top_channel_week"] == SNAPSHOT["top_channel_week"]
+    assert data["top_channel_all"] == SNAPSHOT["top_channel_all"]
     client.async_fetch_snapshot.assert_awaited_once_with(user="jwsoat")
 
 
 async def test_coordinator_passes_none_for_all_accounts(hass: HomeAssistant) -> None:
-    client = _mock_client(channel_seconds=300)
+    client = _mock_client()
     coord = TwitchWatchtimeCoordinator(
         hass, client=client, user=None, scan_interval=timedelta(seconds=60)
     )
     data = await coord._async_update_data()
     client.async_fetch_snapshot.assert_awaited_once_with(user=None)
-    assert data["now_channel_today_seconds"] == 300
-    assert data["now_channel_week_seconds"] == 300
-    assert data["now_channel_all_seconds"] == 300
+    # all-accounts entry does not fetch per-channel data
+    assert "now_channel_today_seconds" not in data
 
 
 async def test_coordinator_raises_auth_failed_on_401(hass: HomeAssistant) -> None:
