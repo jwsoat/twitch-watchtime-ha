@@ -28,12 +28,19 @@ from .coordinator import TwitchWatchtimeCoordinator
 
 def _fmt_duration(seconds: int) -> str:
     if not seconds:
-        return "0m"
-    hours, rem = divmod(int(seconds), 3600)
-    minutes = rem // 60
-    if hours == 0:
-        return f"{minutes}m"
-    return f"{hours}h {minutes}m"
+        return "0 seconds"
+    total = int(seconds)
+    h, rem = divmod(total, 3600)
+    m, s = divmod(rem, 60)
+
+    def p(n: int, w: str) -> str:
+        return f"{n} {w}{'s' if n != 1 else ''}"
+
+    if h > 0:
+        return p(h, "hour") if m == 0 else f"{p(h, 'hour')} {p(m, 'minute')}"
+    if m > 0:
+        return p(m, "minute") if s == 0 else f"{p(m, 'minute')} {p(s, 'second')}"
+    return p(s, "second")
 
 
 async def async_setup_entry(
