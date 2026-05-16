@@ -51,6 +51,7 @@ async def async_setup_entry(
             WatchtimeDurationSensor(coordinator, entry, "all", "Watchtime all"),
             WatchtimeNowWatchingSensor(coordinator, entry),
             WatchtimeTopChannelSensor(coordinator, entry),
+            WatchtimeCurrentChannelTodaySensor(coordinator, entry),
         ]
     )
 
@@ -134,6 +135,30 @@ class WatchtimeNowWatchingSensor(_BaseWatchtimeEntity, SensorEntity):
             "title": now.get("title"),
             "started_at": now.get("ts"),
             "twitch_user": now.get("twitch_user"),
+        }
+
+
+class WatchtimeCurrentChannelTodaySensor(_BaseWatchtimeEntity, SensorEntity):
+    """Time watched today for the currently active channel."""
+
+    _attr_icon = "mdi:timer-play-outline"
+
+    def __init__(self, coordinator: TwitchWatchtimeCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator, entry, "now_channel_today", "Watchtime current channel today")
+
+    @property
+    def native_value(self) -> str:
+        seconds = int(self.coordinator.data.get("now_channel_today_seconds", 0))
+        return _fmt_duration(seconds)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        data = self.coordinator.data
+        now = data.get("now") or {}
+        seconds = int(data.get("now_channel_today_seconds", 0))
+        return {
+            "channel": now.get("channel"),
+            "seconds": seconds,
         }
 
 

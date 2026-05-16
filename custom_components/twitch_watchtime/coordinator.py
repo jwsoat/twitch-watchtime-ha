@@ -41,7 +41,16 @@ class TwitchWatchtimeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:
-            return await self._client.async_fetch_snapshot(user=self._user)
+            snapshot = await self._client.async_fetch_snapshot(user=self._user)
+            now = snapshot.get("now")
+            channel = now.get("channel") if now else None
+            if channel:
+                snapshot["now_channel_today_seconds"] = await self._client.async_get_channel_today(
+                    channel=channel, user=self._user
+                )
+            else:
+                snapshot["now_channel_today_seconds"] = 0
+            return snapshot
         except TwitchWatchtimeAuthError as err:
             raise ConfigEntryAuthFailed(str(err)) from err
         except TwitchWatchtimeConnectionError as err:
