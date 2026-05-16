@@ -44,16 +44,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator: TwitchWatchtimeCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [
-            WatchtimeDurationSensor(coordinator, entry, "today", "Watchtime today"),
-            WatchtimeDurationSensor(coordinator, entry, "week", "Watchtime week"),
-            WatchtimeDurationSensor(coordinator, entry, "all", "Watchtime all"),
-            WatchtimeNowWatchingSensor(coordinator, entry),
-            WatchtimeTopChannelSensor(coordinator, entry),
-            WatchtimeCurrentChannelTodaySensor(coordinator, entry),
-        ]
-    )
+    entities: list = [
+        WatchtimeDurationSensor(coordinator, entry, "today", "Watchtime today"),
+        WatchtimeDurationSensor(coordinator, entry, "week", "Watchtime week"),
+        WatchtimeDurationSensor(coordinator, entry, "all", "Watchtime all"),
+        WatchtimeNowWatchingSensor(coordinator, entry),
+        WatchtimeTopChannelSensor(coordinator, entry),
+    ]
+    if entry.data[CONF_USER] != USER_ALL:
+        entities.append(WatchtimeCurrentChannelTodaySensor(coordinator, entry))
+    async_add_entities(entities)
 
 
 def _device_info(entry: ConfigEntry) -> DeviceInfo:
