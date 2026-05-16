@@ -108,27 +108,27 @@ class TwitchWatchtimeClient:
         params_user = {"user": user} if user else None
         params_today = {"window": "today", **(params_user or {})}
         params_week = {"window": "week", **(params_user or {})}
+        params_month = {"window": "month", **(params_user or {})}
         params_all = {"window": "all", **(params_user or {})}
 
-        params_cat_today = {"window": "today", **(params_user or {})}
-        params_cat_week = {"window": "week", **(params_user or {})}
-        params_cat_all = {"window": "all", **(params_user or {})}
-
         (
-            today, top_today, top_week, top_all,
-            week, all_time, now,
-            cat_today, cat_week, cat_all,
+            today, top_today, top_week, top_month, top_all,
+            week, month, all_time, now,
+            cat_today, cat_week, cat_month, cat_all,
         ) = await asyncio.gather(
             self._get("/stats/total", params=params_today),
             self._get("/stats/top_channel", params=params_today),
             self._get("/stats/top_channel", params=params_week),
+            self._get("/stats/top_channel", params=params_month),
             self._get("/stats/top_channel", params=params_all),
             self._get("/stats/total", params=params_week),
+            self._get("/stats/total", params=params_month),
             self._get("/stats/total", params=params_all),
             self._get("/stats/now", params=params_user),
-            self._get("/stats/categories", params=params_cat_today),
-            self._get("/stats/categories", params=params_cat_week),
-            self._get("/stats/categories", params=params_cat_all),
+            self._get("/stats/categories", params=params_today),
+            self._get("/stats/categories", params=params_week),
+            self._get("/stats/categories", params=params_month),
+            self._get("/stats/categories", params=params_all),
         )
 
         # /stats/now returns either {"now": None} or {"ts": ..., "channel": ..., ...}
@@ -147,16 +147,20 @@ class TwitchWatchtimeClient:
 
         tc_today_name, tc_today_sec = _pick_top_cat(cat_today)
         tc_week_name, tc_week_sec = _pick_top_cat(cat_week)
+        tc_month_name, tc_month_sec = _pick_top_cat(cat_month)
         tc_all_name, tc_all_sec = _pick_top_cat(cat_all)
 
         return {
             "today_seconds": int(today.get("seconds", 0)),
             "week_seconds": int(week.get("seconds", 0)),
+            "month_seconds": int(month.get("seconds", 0)),
             "all_seconds": int(all_time.get("seconds", 0)),
             "top_channel": top_today.get("channel"),
             "top_channel_seconds": int(top_today.get("seconds", 0)),
             "top_channel_week": top_week.get("channel"),
             "top_channel_week_seconds": int(top_week.get("seconds", 0)),
+            "top_channel_month": top_month.get("channel"),
+            "top_channel_month_seconds": int(top_month.get("seconds", 0)),
             "top_channel_all": top_all.get("channel"),
             "top_channel_all_seconds": int(top_all.get("seconds", 0)),
             "now": now_value,
@@ -164,6 +168,8 @@ class TwitchWatchtimeClient:
             "top_category_today_seconds": tc_today_sec,
             "top_category_week": tc_week_name,
             "top_category_week_seconds": tc_week_sec,
+            "top_category_month": tc_month_name,
+            "top_category_month_seconds": tc_month_sec,
             "top_category_all": tc_all_name,
             "top_category_all_seconds": tc_all_sec,
         }

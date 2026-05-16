@@ -50,6 +50,7 @@ class TwitchWatchtimeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 windows = (
                     ("now_channel_today_seconds", "today"),
                     ("now_channel_week_seconds", "week"),
+                    ("now_channel_month_seconds", "month"),
                     ("now_channel_all_seconds", "all"),
                 )
                 if channel:
