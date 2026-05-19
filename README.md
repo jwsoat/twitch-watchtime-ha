@@ -39,6 +39,7 @@ graph, automate, and put on a dashboard.
 | Entity | What |
 |---|---|
 | `sensor.<prefix>_watchtime_now_watching` | Current channel name, or `idle` |
+| `sensor.<prefix>_watchtime_now_category` | Current category name, or `idle` |
 | `binary_sensor.<prefix>_watchtime_active` | `on` whenever the backend saw a heartbeat in the last 2 minutes |
 
 ### Current channel

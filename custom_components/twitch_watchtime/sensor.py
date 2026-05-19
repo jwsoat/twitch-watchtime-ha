@@ -50,6 +50,7 @@ async def async_setup_entry(
         WatchtimeDurationSensor(coordinator, entry, "month", "Watchtime last 30 days"),
         WatchtimeDurationSensor(coordinator, entry, "all", "Watchtime all"),
         WatchtimeNowWatchingSensor(coordinator, entry),
+        WatchtimeNowCategorySensor(coordinator, entry),
         WatchtimeTopChannelSensor(coordinator, entry, "today", "Top Channel Daily"),
         WatchtimeTopChannelSensor(coordinator, entry, "week", "Top Channel Last 7 Days"),
         WatchtimeTopChannelSensor(coordinator, entry, "month", "Top Channel Last 30 Days"),
@@ -144,6 +145,32 @@ class WatchtimeNowWatchingSensor(_BaseWatchtimeEntity, SensorEntity):
         now = self.coordinator.data.get("now") or {}
         return {
             "category": now.get("category"),
+            "title": now.get("title"),
+            "started_at": now.get("ts"),
+            "twitch_user": now.get("twitch_user"),
+        }
+
+
+class WatchtimeNowCategorySensor(_BaseWatchtimeEntity, SensorEntity):
+    """Current category name or 'idle'."""
+
+    _attr_icon = "mdi:shape"
+
+    def __init__(self, coordinator: TwitchWatchtimeCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator, entry, "now_category", "Watchtime now category")
+
+    @property
+    def native_value(self) -> str:
+        now = self.coordinator.data.get("now")
+        if not now:
+            return "idle"
+        return now.get("category") or "idle"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        now = self.coordinator.data.get("now") or {}
+        return {
+            "channel": now.get("channel"),
             "title": now.get("title"),
             "started_at": now.get("ts"),
             "twitch_user": now.get("twitch_user"),
