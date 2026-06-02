@@ -15,6 +15,7 @@ from custom_components.twitch_watchtime.const import (
     CONF_PLATFORM,
     CONF_USER,
     DOMAIN,
+    PLATFORM_MERGED,
     PLATFORM_SOURCES,
     PLATFORM_TWITCH,
     PLATFORM_YOUTUBE,
@@ -166,3 +167,158 @@ async def test_duplicate_unique_id_aborts(hass: HomeAssistant, mock_backend, ena
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    "platform,expected_device_name,expected_device_id",
+    [
+        (PLATFORM_TWITCH, "Twitch - testuser", "twitch_testuser"),
+        (PLATFORM_YOUTUBE, "Youtube - testuser", "youtube_testuser"),
+        (PLATFORM_MERGED, "Merged - testuser", "merged_testuser"),
+    ],
+)
+async def test_config_flow_all_platforms_creates_correct_device(
+    hass: HomeAssistant,
+    mock_backend,
+    enable_custom_integrations,
+    patch_clientsession,
+    platform: str,
+    expected_device_name: str,
+    expected_device_id: str,
+) -> None:
+    """Test config flow for all three platforms creates correct device with platform-aware identifier."""
+    from homeassistant.helpers import device_registry as dr
+
+    # Mock backend responses
+    mock_backend.get(f"{HOST}/health", payload={"ok": True, "interval": 60})
+    mock_backend.get(
+        f"{HOST}/stats/users",
+        payload={"users": [{"user": "testuser", "last_ts": 1700000000, "count": 42}]},
+    )
+
+    # Step 1: User (host + API key)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_API_KEY: KEY}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "platform"
+
+    # Step 2: Platform selection
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PLATFORM: platform}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "account"
+
+    # Step 3: Account selection
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USER: "testuser"}
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+
+    # Verify entry data contains platform
+    entry_data = result["data"]
+    assert entry_data[CONF_PLATFORM] == platform
+    assert entry_data[CONF_USER] == "testuser"
+    assert entry_data[CONF_HOST] == HOST
+    assert entry_data[CONF_API_KEY] == KEY
+
+    # Allow setup to complete (async_setup_entry creates the device)
+    await hass.async_block_till_done()
+
+    # Verify device was created with correct platform-aware identifier
+    device_registry = dr.async_get(hass)
+    devices = list(device_registry.devices.values())
+    platform_devices = [d for d in devices if DOMAIN in d.identifiers]
+
+    assert len(platform_devices) > 0, f"No device found for {platform}"
+    device = platform_devices[0]
+
+    # Verify device identifier includes platform
+    assert (DOMAIN, expected_device_id) in device.identifiers
+    # Verify device name matches platform
+    assert device.name == expected_device_name
+
+
+async def test_multiple_platform_entries_no_conflict(
+    hass: HomeAssistant, mock_backend, enable_custom_integrations, patch_clientsession
+) -> None:
+    """Test that Twitch and YouTube entries can coexist without unique ID conflicts."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    from homeassistant.helpers import device_registry as dr
+
+    # Mock backend for both flows
+    mock_backend.get(f"{HOST}/health", payload={"ok": True, "interval": 60})
+    mock_backend.get(
+        f"{HOST}/stats/users",
+        payload={"users": [{"user": "testuser", "last_ts": 1700000000, "count": 42}]},
+    )
+
+    # Create Twitch entry
+    twitch_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="testuser",
+        data={
+            CONF_HOST: HOST,
+            CONF_API_KEY: KEY,
+            CONF_PLATFORM: PLATFORM_TWITCH,
+            CONF_USER: "testuser",
+        },
+        unique_id=f"{HOST}:{PLATFORM_TWITCH}:testuser",
+    )
+    twitch_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(twitch_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Create YouTube entry with same user, different platform
+    youtube_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="testuser",
+        data={
+            CONF_HOST: HOST,
+            CONF_API_KEY: KEY,
+            CONF_PLATFORM: PLATFORM_YOUTUBE,
+            CONF_USER: "testuser",
+        },
+        unique_id=f"{HOST}:{PLATFORM_YOUTUBE}:testuser",
+    )
+    youtube_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(youtube_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify both entries exist
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 2
+
+    # Verify unique IDs are different (platform-scoped)
+    twitch_uid = twitch_entry.unique_id
+    youtube_uid = youtube_entry.unique_id
+    assert twitch_uid != youtube_uid
+    assert PLATFORM_TWITCH in twitch_uid
+    assert PLATFORM_YOUTUBE in youtube_uid
+
+    # Verify devices were created with different identifiers
+    device_registry = dr.async_get(hass)
+    devices = list(device_registry.devices.values())
+    platform_devices = [d for d in devices if DOMAIN in d.identifiers]
+
+    # Should have two devices, one for each platform
+    assert len(platform_devices) == 2
+
+    twitch_device = next(
+        (d for d in platform_devices if (DOMAIN, "twitch_testuser") in d.identifiers), None
+    )
+    youtube_device = next(
+        (d for d in platform_devices if (DOMAIN, "youtube_testuser") in d.identifiers), None
+    )
+
+    assert twitch_device is not None, "Twitch device not found"
+    assert youtube_device is not None, "YouTube device not found"
+    assert twitch_device.name == "Twitch - testuser"
+    assert youtube_device.name == "Youtube - testuser"
