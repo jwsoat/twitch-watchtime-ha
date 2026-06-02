@@ -21,29 +21,34 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class TwitchWatchtimeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Polls the backend and exposes the merged snapshot to entities."""
+class WatchtimeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Polls the backend and exposes the snapshot to entities."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         *,
         client: TwitchWatchtimeClient,
+        platform: str,
         user: str | None,
         scan_interval: timedelta,
     ) -> None:
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}_{user or 'all_accounts'}",
+            name=f"{DOMAIN}_{platform}_{user or 'all_accounts'}",
             update_interval=scan_interval,
         )
         self._client = client
+        self._platform = platform
         self._user = user
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:
-            snapshot = await self._client.async_fetch_snapshot(user=self._user)
+            snapshot = await self._client.async_fetch_snapshot(
+                platform=self._platform,
+                user=self._user,
+            )
             now = snapshot.get("now")
             channel = now.get("channel") if now else None
             windows = (
@@ -56,7 +61,10 @@ class TwitchWatchtimeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 results = await asyncio.gather(
                     *(
                         self._client.async_get_channel_today(
-                            channel=channel, user=self._user, window=window
+                            platform=self._platform,
+                            channel=channel,
+                            user=self._user,
+                            window=window,
                         )
                         for _, window in windows
                     ),
@@ -72,3 +80,7 @@ class TwitchWatchtimeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed(str(err)) from err
         except TwitchWatchtimeConnectionError as err:
             raise UpdateFailed(str(err)) from err
+
+
+# Keep alias for backward compatibility during migration
+TwitchWatchtimeCoordinator = WatchtimeCoordinator

@@ -13,7 +13,10 @@ from custom_components.twitch_watchtime.api import (
     TwitchWatchtimeAuthError,
     TwitchWatchtimeConnectionError,
 )
-from custom_components.twitch_watchtime.coordinator import TwitchWatchtimeCoordinator
+from custom_components.twitch_watchtime.coordinator import (
+    TwitchWatchtimeCoordinator,
+    WatchtimeCoordinator,
+)
 
 
 SNAPSHOT = {
@@ -98,3 +101,38 @@ async def test_coordinator_raises_update_failed_on_connection_error(hass: HomeAs
     )
     with pytest.raises(UpdateFailed):
         await coord._async_update_data()
+
+
+async def test_coordinator_stores_platform(hass: HomeAssistant) -> None:
+    """Test that WatchtimeCoordinator stores and uses platform parameter."""
+    client = _mock_client()
+    coord = WatchtimeCoordinator(
+        hass,
+        client=client,
+        platform="youtube",
+        user="testuser",
+        scan_interval=timedelta(seconds=60),
+    )
+
+    # Verify platform is stored
+    assert coord._platform == "youtube"
+    assert coord._user == "testuser"
+
+
+async def test_coordinator_passes_platform_to_api(hass: HomeAssistant) -> None:
+    """Test that coordinator passes platform parameter to API calls."""
+    client = _mock_client()
+    coord = WatchtimeCoordinator(
+        hass,
+        client=client,
+        platform="youtube",
+        user="testuser",
+        scan_interval=timedelta(seconds=60),
+    )
+
+    await coord._async_update_data()
+
+    client.async_fetch_snapshot.assert_awaited_once_with(
+        platform="youtube",
+        user="testuser",
+    )

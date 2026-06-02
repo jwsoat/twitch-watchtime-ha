@@ -35,6 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = TwitchWatchtimeCoordinator(
         hass,
         client=client,
+        platform="twitch",
         user=user_param,
         scan_interval=timedelta(seconds=scan_interval),
     )

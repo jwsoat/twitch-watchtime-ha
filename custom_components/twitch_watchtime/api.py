@@ -80,9 +80,9 @@ class TwitchWatchtimeClient:
         data = await self._get("/stats/users")
         return list(data.get("users", []))
 
-    async def async_get_channel_today(self, *, channel: str, user: str | None, window: str = "today") -> int:
+    async def async_get_channel_today(self, *, platform: str, channel: str, user: str | None, window: str = "today") -> int:
         """Return seconds watched for channel in the given window."""
-        params: dict[str, str] = {"channel": channel, "window": window}
+        params: dict[str, str] = {"platform": platform, "channel": channel, "window": window}
         if user:
             params["user"] = user
         data = await self._get("/stats/channel", params=params)
@@ -100,12 +100,13 @@ class TwitchWatchtimeClient:
         top = cats[0]
         return {"category": top.get("category"), "seconds": int(top.get("seconds", 0))}
 
-    async def async_fetch_snapshot(self, *, user: str | None) -> dict[str, Any]:
+    async def async_fetch_snapshot(self, *, platform: str, user: str | None) -> dict[str, Any]:
         """Run the five tick calls in parallel and merge into a coordinator-shaped dict.
 
         Passing user=None pools all accounts; any other value is sent as ?user=<value>.
+        Platform is sent as ?platform=<value> on all requests.
         """
-        params_user = {"user": user} if user else None
+        params_user = {"platform": platform, **({"user": user} if user else {})}
         params_today = {"window": "today", **(params_user or {})}
         params_week = {"window": "week", **(params_user or {})}
         params_month = {"window": "month", **(params_user or {})}
