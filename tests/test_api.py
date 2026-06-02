@@ -157,3 +157,25 @@ async def test_fetch_snapshot_normalizes_stats_now_null_shape() -> None:
             assert snap["now"] is None
     finally:
         await session.close()
+
+
+async def test_fetch_snapshot_includes_platform_in_url() -> None:
+    """Test that platform parameter is included in the API request URL."""
+    client, session = await _make_client()
+    try:
+        with aioresponses() as m:
+            # Mock all required endpoints with platform in the URL
+            m.get(f"{HOST}/stats/total?platform=youtube&window=today", payload={"window": "today", "seconds": 1800})
+            m.get(f"{HOST}/stats/total?platform=youtube&window=week", payload={"window": "week", "seconds": 7200})
+            m.get(f"{HOST}/stats/total?platform=youtube&window=all", payload={"window": "all", "seconds": 360000})
+            m.get(f"{HOST}/stats/top_channel?platform=youtube&window=today", payload={"channel": "testchannel", "seconds": 1200})
+            m.get(f"{HOST}/stats/now?platform=youtube", payload={"now": None})
+            m.get(f"{HOST}/stats/categories?platform=youtube&window=today", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?platform=youtube&window=week", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?platform=youtube&window=all", payload={"categories": []})
+
+            snap = await client.async_fetch_snapshot(platform="youtube", user=None)
+            assert snap["today_seconds"] == 1800
+            assert snap["top_channel"] == "testchannel"
+    finally:
+        await session.close()

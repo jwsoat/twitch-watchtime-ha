@@ -63,22 +63,22 @@ def _mock_client(snapshot=None, raises=None, channel_seconds=600):
 async def test_coordinator_returns_snapshot_on_success(hass: HomeAssistant) -> None:
     client = _mock_client()
     coord = TwitchWatchtimeCoordinator(
-        hass, client=client, user="jwsoat", scan_interval=timedelta(seconds=60)
+        hass, client=client, platform="twitch", user="jwsoat", scan_interval=timedelta(seconds=60)
     )
     data = await coord._async_update_data()
     assert data["today_seconds"] == SNAPSHOT["today_seconds"]
     assert data["top_channel_week"] == SNAPSHOT["top_channel_week"]
     assert data["top_channel_all"] == SNAPSHOT["top_channel_all"]
-    client.async_fetch_snapshot.assert_awaited_once_with(user="jwsoat")
+    client.async_fetch_snapshot.assert_awaited_once_with(platform="twitch", user="jwsoat")
 
 
 async def test_coordinator_passes_none_for_all_accounts(hass: HomeAssistant) -> None:
     client = _mock_client()
     coord = TwitchWatchtimeCoordinator(
-        hass, client=client, user=None, scan_interval=timedelta(seconds=60)
+        hass, client=client, platform="twitch", user=None, scan_interval=timedelta(seconds=60)
     )
     data = await coord._async_update_data()
-    client.async_fetch_snapshot.assert_awaited_once_with(user=None)
+    client.async_fetch_snapshot.assert_awaited_once_with(platform="twitch", user=None)
     # all-accounts entry also fetches per-channel data for the active channel
     assert data["now_channel_today_seconds"] == 600
     assert data["now_channel_month_seconds"] == 600

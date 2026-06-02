@@ -26,8 +26,10 @@ PLATFORM_TWITCH = "twitch"
 PLATFORM_YOUTUBE = "youtube"
 PLATFORM_MERGED = "merged"
 
-PLATFORMS = [PLATFORM_TWITCH, PLATFORM_YOUTUBE, PLATFORM_MERGED]
+PLATFORM_SOURCES = [PLATFORM_TWITCH, PLATFORM_YOUTUBE, PLATFORM_MERGED]
 ```
+
+**Note:** The constant is named `PLATFORM_SOURCES` (not `PLATFORMS`) to avoid shadowing the pre-existing `PLATFORMS` constant in const.py that holds the HA sensor/binary_sensor platform list. Downstream tasks reference this as `PLATFORM_SOURCES`.
 
 - [ ] **Step 2: Commit**
 
@@ -464,9 +466,9 @@ from .const import (
     OPT_IDLE_TIMEOUT,
     OPT_SCAN_INTERVAL,
     PLATFORM_MERGED,
+    PLATFORM_SOURCES,
     PLATFORM_TWITCH,
     PLATFORM_YOUTUBE,
-    PLATFORMS,
     USER_ALL,
 )
 ```
@@ -536,10 +538,10 @@ async def async_step_platform(self, user_input: dict[str, Any] | None = None) ->
     return self.async_show_form(
         step_id="platform",
         data_schema=vol.Schema({
-            vol.Required(CONF_PLATFORM): vol.In(PLATFORMS),
+            vol.Required(CONF_PLATFORM): vol.In(PLATFORM_SOURCES),
         }),
         description_placeholders={
-            "platforms": ", ".join(PLATFORMS),
+            "platforms": ", ".join(PLATFORM_SOURCES),
         },
     )
 ```

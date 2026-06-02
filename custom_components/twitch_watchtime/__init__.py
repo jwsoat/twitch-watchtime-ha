@@ -11,11 +11,13 @@ from .api import TwitchWatchtimeClient
 from .const import (
     CONF_API_KEY,
     CONF_HOST,
+    CONF_PLATFORM,
     CONF_USER,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     OPT_SCAN_INTERVAL,
     PLATFORMS,
+    PLATFORM_TWITCH,
     USER_ALL,
 )
 from .coordinator import TwitchWatchtimeCoordinator
@@ -27,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_key = entry.data[CONF_API_KEY]
     user = entry.data[CONF_USER]
     user_param: str | None = None if user == USER_ALL else user
+    platform = entry.data.get(CONF_PLATFORM, PLATFORM_TWITCH)
 
     scan_interval = entry.options.get(OPT_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
@@ -35,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = TwitchWatchtimeCoordinator(
         hass,
         client=client,
-        platform="twitch",
+        platform=platform,
         user=user_param,
         scan_interval=timedelta(seconds=scan_interval),
     )
