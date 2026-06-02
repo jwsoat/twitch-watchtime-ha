@@ -20,6 +20,7 @@ from .api import (
 from .const import (
     CONF_API_KEY,
     CONF_HOST,
+    CONF_PLATFORM,
     CONF_USER,
     DEFAULT_IDLE_TIMEOUT,
     DEFAULT_SCAN_INTERVAL,
@@ -28,6 +29,7 @@ from .const import (
     MIN_SCAN_INTERVAL,
     OPT_IDLE_TIMEOUT,
     OPT_SCAN_INTERVAL,
+    PLATFORM_SOURCES,
     USER_ALL,
 )
 
@@ -49,6 +51,7 @@ class TwitchWatchtimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         self._host: str | None = None
         self._api_key: str | None = None
+        self._platform: str | None = None
         self._users: list[dict[str, Any]] = []
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
@@ -71,7 +74,7 @@ class TwitchWatchtimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 self._host = host
                 self._api_key = api_key
-                return await self.async_step_account()
+                return await self.async_step_platform()
 
         return self.async_show_form(
             step_id="user",
@@ -79,18 +82,37 @@ class TwitchWatchtimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_platform(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        if user_input is not None:
+            self._platform = user_input[CONF_PLATFORM]
+            return await self.async_step_account()
+
+        # Show platform dropdown
+        schema = vol.Schema({vol.Required(CONF_PLATFORM): vol.In(PLATFORM_SOURCES)})
+
+        return self.async_show_form(
+            step_id="platform",
+            data_schema=schema,
+        )
+
     async def async_step_account(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         if user_input is not None:
             assert self._host is not None
             assert self._api_key is not None
+            assert self._platform is not None
             chosen = user_input[CONF_USER]
-            unique = f"{self._host}:{chosen}"
+            unique = f"{self._host}:{self._platform}:{chosen}"
             await self.async_set_unique_id(unique)
             self._abort_if_unique_id_configured()
             title = "All accounts" if chosen == USER_ALL else chosen
             return self.async_create_entry(
                 title=title,
-                data={CONF_HOST: self._host, CONF_API_KEY: self._api_key, CONF_USER: chosen},
+                data={
+                    CONF_HOST: self._host,
+                    CONF_API_KEY: self._api_key,
+                    CONF_PLATFORM: self._platform,
+                    CONF_USER: chosen,
+                },
             )
 
         # Build the dropdown: All accounts + each known user

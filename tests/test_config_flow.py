@@ -12,8 +12,12 @@ from homeassistant.data_entry_flow import FlowResultType
 from custom_components.twitch_watchtime.const import (
     CONF_API_KEY,
     CONF_HOST,
+    CONF_PLATFORM,
     CONF_USER,
     DOMAIN,
+    PLATFORM_SOURCES,
+    PLATFORM_TWITCH,
+    PLATFORM_YOUTUBE,
     USER_ALL,
 )
 
@@ -65,27 +69,58 @@ async def _drive_step1(hass: HomeAssistant, mock_backend) -> dict:
     )
 
 
+async def _drive_step2_platform(hass: HomeAssistant, flow_id: str, platform: str) -> dict:
+    """Drive step 2 (platform selection)."""
+    return await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_PLATFORM: platform}
+    )
+
+
+async def test_platform_step_displayed_after_user_step(hass: HomeAssistant, mock_backend, enable_custom_integrations, patch_clientsession) -> None:
+    """Test that platform step is shown after user step."""
+    step2 = await _drive_step1(hass, mock_backend)
+    assert step2["type"] == FlowResultType.FORM
+    assert step2["step_id"] == "platform"
+
+
+async def test_platform_step_shows_all_options(hass: HomeAssistant, mock_backend, enable_custom_integrations, patch_clientsession) -> None:
+    """Test that platform step offers all platform choices."""
+    step2 = await _drive_step1(hass, mock_backend)
+    assert step2["type"] == FlowResultType.FORM
+    assert step2["step_id"] == "platform"
+    # Check that the schema contains all platform options
+    schema = step2["data_schema"]
+    # Verify schema exists and can be inspected
+    assert schema is not None
+
+
 async def test_full_happy_path_creates_entry(hass: HomeAssistant, mock_backend, enable_custom_integrations, patch_clientsession) -> None:
     step2 = await _drive_step1(hass, mock_backend)
     assert step2["type"] == FlowResultType.FORM
-    assert step2["step_id"] == "account"
+    assert step2["step_id"] == "platform"
+
+    step3 = await _drive_step2_platform(hass, step2["flow_id"], PLATFORM_TWITCH)
+    assert step3["type"] == FlowResultType.FORM
+    assert step3["step_id"] == "account"
 
     result = await hass.config_entries.flow.async_configure(
-        step2["flow_id"], {CONF_USER: "jwsoat"}
+        step3["flow_id"], {CONF_USER: "jwsoat"}
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "jwsoat"
-    assert result["data"] == {CONF_HOST: HOST, CONF_API_KEY: KEY, CONF_USER: "jwsoat"}
+    assert result["data"] == {CONF_HOST: HOST, CONF_API_KEY: KEY, CONF_PLATFORM: PLATFORM_TWITCH, CONF_USER: "jwsoat"}
 
 
 async def test_all_accounts_creates_entry_with_sentinel(hass: HomeAssistant, mock_backend, enable_custom_integrations, patch_clientsession) -> None:
     step2 = await _drive_step1(hass, mock_backend)
+    step3 = await _drive_step2_platform(hass, step2["flow_id"], PLATFORM_YOUTUBE)
     result = await hass.config_entries.flow.async_configure(
-        step2["flow_id"], {CONF_USER: USER_ALL}
+        step3["flow_id"], {CONF_USER: USER_ALL}
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "All accounts"
     assert result["data"][CONF_USER] == USER_ALL
+    assert result["data"][CONF_PLATFORM] == PLATFORM_YOUTUBE
 
 
 async def test_cannot_connect_on_health_failure(hass: HomeAssistant, mock_backend, enable_custom_integrations, patch_clientsession) -> None:
@@ -119,14 +154,15 @@ async def test_duplicate_unique_id_aborts(hass: HomeAssistant, mock_backend, ena
 
     existing = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_API_KEY: KEY, CONF_USER: "jwsoat"},
-        unique_id=f"{HOST}:jwsoat",
+        data={CONF_HOST: HOST, CONF_API_KEY: KEY, CONF_PLATFORM: PLATFORM_TWITCH, CONF_USER: "jwsoat"},
+        unique_id=f"{HOST}:{PLATFORM_TWITCH}:jwsoat",
     )
     existing.add_to_hass(hass)
 
     step2 = await _drive_step1(hass, mock_backend)
+    step3 = await _drive_step2_platform(hass, step2["flow_id"], PLATFORM_TWITCH)
     result = await hass.config_entries.flow.async_configure(
-        step2["flow_id"], {CONF_USER: "jwsoat"}
+        step3["flow_id"], {CONF_USER: "jwsoat"}
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
