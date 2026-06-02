@@ -51,7 +51,7 @@ graph, automate, and put on a dashboard.
 | `sensor.<prefix>_watchtime_current_channel_month` | Time watched on the active channel over the last 30 days |
 | `sensor.<prefix>_watchtime_current_channel_all_time` | All-time watch time on the active channel |
 
-`<prefix>` is the Twitch login (or `all_accounts` if the entry is set to pool everything).
+`<prefix>` is derived from the device name: for "Twitch - jwsoat" it's `twitch_jwsoat`, for "Merged - all" it's `merged_all`, etc.
 
 ## Requirements
 
@@ -72,8 +72,31 @@ graph, automate, and put on a dashboard.
 1. **Settings → Devices & Services → Add Integration**.
 2. Search **Twitch Watchtime**.
 3. **Step 1** — paste your backend URL (e.g. `http://192.168.1.100:8765`) and your API key. The integration calls `/health` and `/stats/users` to verify both.
-4. **Step 2** — pick an account from the dropdown. Choose `All accounts` to pool everyone (including legacy anonymous heartbeats), or a specific Twitch login.
-5. Done. Add the integration again for each Twitch account you want to track separately.
+4. **Step 2** — choose a platform:
+   - **Twitch** — Twitch watchtime only
+   - **YouTube** — YouTube watchtime only
+   - **Merged** — Combined Twitch + YouTube watchtime (if backend provides merged data)
+5. **Step 3** — pick an account from the dropdown. Choose `All accounts` to pool everyone (including legacy anonymous heartbeats), or a specific login.
+6. Done. Add the integration again for each platform+account combination you want to track separately (e.g., one entry for Twitch-jwsoat, another for YouTube-myaccount, another for Merged-all).
+
+## Platform behavior
+
+Each integration entry tracks one platform+account combination. The integration will create a device per entry:
+
+- **Twitch entry** creates device "Twitch - <account>"
+- **YouTube entry** creates device "YouTube - <account>"
+- **Merged entry** creates device "Merged - <account>"
+
+All sensors refer to the same sensor names (watchtime_today, top_channel_weekly, etc.), but each device's sensors only show data for that entry's platform.
+
+**Merged mode:** If your backend provides `/stats/merged/*` endpoints, the Merged platform gives you a single set of sensors combining both Twitch and YouTube. This is useful if you want one unified dashboard for cross-platform watch time.
+
+**Multiple entries:** Create separate entries for separate tracking. For example:
+- Twitch - jwsoat (tracks only your Twitch time)
+- YouTube - myaccount (tracks only your YouTube time)
+- Merged - all (tracks combined time if you want one unified view)
+
+Each entry polls independently on the configured scan interval.
 
 After install, click the entry's **Configure** button to tweak:
 - **Scan interval** (default `60`s, range `15`–`600`).
