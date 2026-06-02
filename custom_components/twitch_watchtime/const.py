@@ -15,6 +15,15 @@ CONF_USER = "user"  # Twitch login, "all_accounts" sentinel, or a custom-typed l
 # Special value used in CONF_USER when the entry should pool all accounts.
 USER_ALL = "all_accounts"
 
+# Platform selection for watchtime sources
+CONF_PLATFORM = "platform"
+
+PLATFORM_TWITCH = "twitch"
+PLATFORM_YOUTUBE = "youtube"
+PLATFORM_MERGED = "merged"
+
+PLATFORM_SOURCES = [PLATFORM_TWITCH, PLATFORM_YOUTUBE, PLATFORM_MERGED]
+
 # Options flow keys
 OPT_SCAN_INTERVAL = "scan_interval"
 OPT_IDLE_TIMEOUT = "idle_timeout"
