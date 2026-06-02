@@ -43,7 +43,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    coordinator: TwitchWatchtimeCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TwitchWatchtimeCoordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     entities: list = [
         WatchtimeDurationSensor(coordinator, entry, "today", "Watchtime today"),
         WatchtimeDurationSensor(coordinator, entry, "week", "Watchtime last 7 days"),
