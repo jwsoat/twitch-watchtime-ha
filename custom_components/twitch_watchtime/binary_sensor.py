@@ -36,7 +36,10 @@ class WatchtimeActiveBinarySensor(
 
     def __init__(self, coordinator: TwitchWatchtimeCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_active"
+        # Platform-scoped unique_id: includes platform and user from coordinator
+        platform = coordinator._platform
+        user = coordinator._user or "all_accounts"
+        self._attr_unique_id = f"{platform}_{user}_active"
         self._attr_device_info = _device_info(entry)
 
     @property
