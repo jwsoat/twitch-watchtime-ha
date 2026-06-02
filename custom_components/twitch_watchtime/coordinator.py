@@ -33,6 +33,15 @@ class WatchtimeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         user: str | None,
         scan_interval: timedelta,
     ) -> None:
+        """Initialize the coordinator.
+
+        Args:
+            hass: Home Assistant instance.
+            client: API client.
+            platform: Platform identifier (e.g., 'twitch', 'youtube', 'merged').
+            user: User identifier or None for all accounts.
+            scan_interval: Update interval.
+        """
         super().__init__(
             hass,
             _LOGGER,

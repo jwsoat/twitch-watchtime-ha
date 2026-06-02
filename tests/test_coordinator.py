@@ -88,7 +88,7 @@ async def test_coordinator_passes_none_for_all_accounts(hass: HomeAssistant) -> 
 async def test_coordinator_raises_auth_failed_on_401(hass: HomeAssistant) -> None:
     client = _mock_client(raises=TwitchWatchtimeAuthError("401"))
     coord = TwitchWatchtimeCoordinator(
-        hass, client=client, user="jwsoat", scan_interval=timedelta(seconds=60)
+        hass, client=client, platform="twitch", user="jwsoat", scan_interval=timedelta(seconds=60)
     )
     with pytest.raises(ConfigEntryAuthFailed):
         await coord._async_update_data()
@@ -97,7 +97,7 @@ async def test_coordinator_raises_auth_failed_on_401(hass: HomeAssistant) -> Non
 async def test_coordinator_raises_update_failed_on_connection_error(hass: HomeAssistant) -> None:
     client = _mock_client(raises=TwitchWatchtimeConnectionError("timeout"))
     coord = TwitchWatchtimeCoordinator(
-        hass, client=client, user="jwsoat", scan_interval=timedelta(seconds=60)
+        hass, client=client, platform="twitch", user="jwsoat", scan_interval=timedelta(seconds=60)
     )
     with pytest.raises(UpdateFailed):
         await coord._async_update_data()

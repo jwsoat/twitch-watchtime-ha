@@ -79,30 +79,44 @@ async def test_fetch_snapshot_merges_five_endpoints() -> None:
     client, session = await _make_client()
     try:
         with aioresponses() as m:
-            m.get(f"{HOST}/stats/total?window=today", payload={"window": "today", "seconds": 1800})
-            m.get(f"{HOST}/stats/total?window=week", payload={"window": "week", "seconds": 7200})
-            m.get(f"{HOST}/stats/total?window=all", payload={"window": "all", "seconds": 360000})
-            m.get(f"{HOST}/stats/top_channel?window=today", payload={"channel": "cinna", "seconds": 1200})
-            m.get(f"{HOST}/stats/now", payload={
+            m.get(f"{HOST}/stats/total?platform=twitch&window=today", payload={"window": "today", "seconds": 1800})
+            m.get(f"{HOST}/stats/total?platform=twitch&window=week", payload={"window": "week", "seconds": 7200})
+            m.get(f"{HOST}/stats/total?platform=twitch&window=month", payload={"window": "month", "seconds": 10000})
+            m.get(f"{HOST}/stats/total?platform=twitch&window=all", payload={"window": "all", "seconds": 360000})
+            m.get(f"{HOST}/stats/top_channel?platform=twitch&window=today", payload={"channel": "cinna", "seconds": 1200})
+            m.get(f"{HOST}/stats/top_channel?platform=twitch&window=week", payload={"channel": "cinna", "seconds": 1200})
+            m.get(f"{HOST}/stats/top_channel?platform=twitch&window=month", payload={"channel": "cinna", "seconds": 1200})
+            m.get(f"{HOST}/stats/top_channel?platform=twitch&window=all", payload={"channel": "cinna", "seconds": 1200})
+            m.get(f"{HOST}/stats/now?platform=twitch", payload={
                 "ts": 1700000000, "channel": "cinna", "category": "Just Chatting",
                 "title": "stream title", "twitch_user": None,
             })
-            m.get(f"{HOST}/stats/categories?window=today", payload={"categories": [
+            m.get(f"{HOST}/stats/categories?platform=twitch&window=today", payload={"categories": [
                 {"category": "Just Chatting", "seconds": 900},
             ]})
-            m.get(f"{HOST}/stats/categories?window=week", payload={"categories": [
+            m.get(f"{HOST}/stats/categories?platform=twitch&window=week", payload={"categories": [
                 {"category": "Just Chatting", "seconds": 4500},
             ]})
-            m.get(f"{HOST}/stats/categories?window=all", payload={"categories": [
+            m.get(f"{HOST}/stats/categories?platform=twitch&window=month", payload={"categories": [
+                {"category": "Just Chatting", "seconds": 6000},
+            ]})
+            m.get(f"{HOST}/stats/categories?platform=twitch&window=all", payload={"categories": [
                 {"category": "League of Legends", "seconds": 200000},
             ]})
-            snap = await client.async_fetch_snapshot(user=None)
+            snap = await client.async_fetch_snapshot(platform="twitch", user=None)
             assert snap == {
                 "today_seconds": 1800,
                 "week_seconds": 7200,
+                "month_seconds": 10000,
                 "all_seconds": 360000,
                 "top_channel": "cinna",
                 "top_channel_seconds": 1200,
+                "top_channel_week": "cinna",
+                "top_channel_week_seconds": 1200,
+                "top_channel_month": "cinna",
+                "top_channel_month_seconds": 1200,
+                "top_channel_all": "cinna",
+                "top_channel_all_seconds": 1200,
                 "now": {
                     "ts": 1700000000, "channel": "cinna", "category": "Just Chatting",
                     "title": "stream title", "twitch_user": None,
@@ -111,6 +125,8 @@ async def test_fetch_snapshot_merges_five_endpoints() -> None:
                 "top_category_today_seconds": 900,
                 "top_category_week": "Just Chatting",
                 "top_category_week_seconds": 4500,
+                "top_category_month": "Just Chatting",
+                "top_category_month_seconds": 6000,
                 "top_category_all": "League of Legends",
                 "top_category_all_seconds": 200000,
             }
@@ -122,15 +138,20 @@ async def test_fetch_snapshot_passes_user_param_when_set() -> None:
     client, session = await _make_client()
     try:
         with aioresponses() as m:
-            m.get(f"{HOST}/stats/total?window=today&user=jwsoat", payload={"window": "today", "seconds": 60})
-            m.get(f"{HOST}/stats/total?window=week&user=jwsoat", payload={"window": "week", "seconds": 60})
-            m.get(f"{HOST}/stats/total?window=all&user=jwsoat", payload={"window": "all", "seconds": 60})
-            m.get(f"{HOST}/stats/top_channel?window=today&user=jwsoat", payload={"channel": None, "seconds": 0})
-            m.get(f"{HOST}/stats/now?user=jwsoat", payload={"now": None})
-            m.get(f"{HOST}/stats/categories?window=today&user=jwsoat", payload={"categories": []})
-            m.get(f"{HOST}/stats/categories?window=week&user=jwsoat", payload={"categories": []})
-            m.get(f"{HOST}/stats/categories?window=all&user=jwsoat", payload={"categories": []})
-            snap = await client.async_fetch_snapshot(user="jwsoat")
+            m.get(f"{HOST}/stats/total?platform=twitch&window=today&user=jwsoat", payload={"window": "today", "seconds": 60})
+            m.get(f"{HOST}/stats/total?platform=twitch&window=week&user=jwsoat", payload={"window": "week", "seconds": 60})
+            m.get(f"{HOST}/stats/total?platform=twitch&window=month&user=jwsoat", payload={"window": "month", "seconds": 60})
+            m.get(f"{HOST}/stats/total?platform=twitch&window=all&user=jwsoat", payload={"window": "all", "seconds": 60})
+            m.get(f"{HOST}/stats/top_channel?platform=twitch&window=today&user=jwsoat", payload={"channel": None, "seconds": 0})
+            m.get(f"{HOST}/stats/top_channel?platform=twitch&window=week&user=jwsoat", payload={"channel": None, "seconds": 0})
+            m.get(f"{HOST}/stats/top_channel?platform=twitch&window=month&user=jwsoat", payload={"channel": None, "seconds": 0})
+            m.get(f"{HOST}/stats/top_channel?platform=twitch&window=all&user=jwsoat", payload={"channel": None, "seconds": 0})
+            m.get(f"{HOST}/stats/now?platform=twitch&user=jwsoat", payload={"now": None})
+            m.get(f"{HOST}/stats/categories?platform=twitch&window=today&user=jwsoat", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?platform=twitch&window=week&user=jwsoat", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?platform=twitch&window=month&user=jwsoat", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?platform=twitch&window=all&user=jwsoat", payload={"categories": []})
+            snap = await client.async_fetch_snapshot(platform="twitch", user="jwsoat")
             assert snap["today_seconds"] == 60
             assert snap["top_channel"] is None
             assert snap["now"] is None
@@ -145,15 +166,20 @@ async def test_fetch_snapshot_normalizes_stats_now_null_shape() -> None:
     client, session = await _make_client()
     try:
         with aioresponses() as m:
-            m.get(f"{HOST}/stats/total?window=today", payload={"window": "today", "seconds": 0})
-            m.get(f"{HOST}/stats/total?window=week", payload={"window": "week", "seconds": 0})
-            m.get(f"{HOST}/stats/total?window=all", payload={"window": "all", "seconds": 0})
-            m.get(f"{HOST}/stats/top_channel?window=today", payload={"channel": None, "seconds": 0})
-            m.get(f"{HOST}/stats/now", payload={"now": None})
-            m.get(f"{HOST}/stats/categories?window=today", payload={"categories": []})
-            m.get(f"{HOST}/stats/categories?window=week", payload={"categories": []})
-            m.get(f"{HOST}/stats/categories?window=all", payload={"categories": []})
-            snap = await client.async_fetch_snapshot(user=None)
+            m.get(f"{HOST}/stats/total?platform=twitch&window=today", payload={"window": "today", "seconds": 0})
+            m.get(f"{HOST}/stats/total?platform=twitch&window=week", payload={"window": "week", "seconds": 0})
+            m.get(f"{HOST}/stats/total?platform=twitch&window=month", payload={"window": "month", "seconds": 0})
+            m.get(f"{HOST}/stats/total?platform=twitch&window=all", payload={"window": "all", "seconds": 0})
+            m.get(f"{HOST}/stats/top_channel?platform=twitch&window=today", payload={"channel": None, "seconds": 0})
+            m.get(f"{HOST}/stats/top_channel?platform=twitch&window=week", payload={"channel": None, "seconds": 0})
+            m.get(f"{HOST}/stats/top_channel?platform=twitch&window=month", payload={"channel": None, "seconds": 0})
+            m.get(f"{HOST}/stats/top_channel?platform=twitch&window=all", payload={"channel": None, "seconds": 0})
+            m.get(f"{HOST}/stats/now?platform=twitch", payload={"now": None})
+            m.get(f"{HOST}/stats/categories?platform=twitch&window=today", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?platform=twitch&window=week", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?platform=twitch&window=month", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?platform=twitch&window=all", payload={"categories": []})
+            snap = await client.async_fetch_snapshot(platform="twitch", user=None)
             assert snap["now"] is None
     finally:
         await session.close()
@@ -167,15 +193,39 @@ async def test_fetch_snapshot_includes_platform_in_url() -> None:
             # Mock all required endpoints with platform in the URL
             m.get(f"{HOST}/stats/total?platform=youtube&window=today", payload={"window": "today", "seconds": 1800})
             m.get(f"{HOST}/stats/total?platform=youtube&window=week", payload={"window": "week", "seconds": 7200})
+            m.get(f"{HOST}/stats/total?platform=youtube&window=month", payload={"window": "month", "seconds": 10000})
             m.get(f"{HOST}/stats/total?platform=youtube&window=all", payload={"window": "all", "seconds": 360000})
             m.get(f"{HOST}/stats/top_channel?platform=youtube&window=today", payload={"channel": "testchannel", "seconds": 1200})
+            m.get(f"{HOST}/stats/top_channel?platform=youtube&window=week", payload={"channel": "testchannel", "seconds": 1200})
+            m.get(f"{HOST}/stats/top_channel?platform=youtube&window=month", payload={"channel": "testchannel", "seconds": 1200})
+            m.get(f"{HOST}/stats/top_channel?platform=youtube&window=all", payload={"channel": "testchannel", "seconds": 1200})
             m.get(f"{HOST}/stats/now?platform=youtube", payload={"now": None})
             m.get(f"{HOST}/stats/categories?platform=youtube&window=today", payload={"categories": []})
             m.get(f"{HOST}/stats/categories?platform=youtube&window=week", payload={"categories": []})
+            m.get(f"{HOST}/stats/categories?platform=youtube&window=month", payload={"categories": []})
             m.get(f"{HOST}/stats/categories?platform=youtube&window=all", payload={"categories": []})
 
             snap = await client.async_fetch_snapshot(platform="youtube", user=None)
             assert snap["today_seconds"] == 1800
             assert snap["top_channel"] == "testchannel"
+    finally:
+        await session.close()
+
+
+async def test_get_channel_today_includes_platform() -> None:
+    """Test that async_get_channel_today includes platform in the URL."""
+    client, session = await _make_client()
+    try:
+        with aioresponses() as m:
+            m.get(f"{HOST}/stats/channel?platform=youtube&channel=testchannel&user=testuser&window=today", payload={"seconds": 300})
+
+            result = await client.async_get_channel_today(
+                platform="youtube",
+                channel="testchannel",
+                user="testuser",
+                window="today",
+            )
+
+            assert result == 300
     finally:
         await session.close()
