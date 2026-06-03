@@ -76,9 +76,23 @@ class TwitchWatchtimeClient:
         return bool(data.get("ok"))
 
     async def async_get_users(self, *, platform: str | None = None) -> list[dict[str, Any]]:
-        """Return the list of distinct user values for the given platform."""
-        params = {"platform": platform} if platform else None
-        data = await self._get("/stats/users", params=params)
+        """Return the list of distinct user values for the given platform.
+
+        Twitch:  GET /stats/users         → {"users": [...]}
+        YouTube: GET /stats/youtube/users → {"users": [...]}
+        Merged:  GET /settings/user-accounts → {"accounts": [{label, ...}]}
+        """
+        if platform == "youtube":
+            data = await self._get("/stats/youtube/users")
+            return list(data.get("users", []))
+        if platform == "merged":
+            data = await self._get("/settings/user-accounts")
+            return [
+                {"user": a["label"], "count": None}
+                for a in data.get("accounts", [])
+            ]
+        # Default: Twitch
+        data = await self._get("/stats/users")
         return list(data.get("users", []))
 
     async def async_get_channel_today(self, *, platform: str, channel: str, user: str | None, window: str = "today") -> int:
