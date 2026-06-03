@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     host = entry.data[CONF_HOST]
     api_key = entry.data[CONF_API_KEY]
-    platform = entry.data[CONF_PLATFORM]
+    platform = entry.data.get(CONF_PLATFORM, "twitch")
     user = entry.data[CONF_USER]
     scan_interval = timedelta(
         seconds=entry.options.get(OPT_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
