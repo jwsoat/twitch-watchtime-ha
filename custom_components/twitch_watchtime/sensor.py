@@ -87,10 +87,7 @@ class _BaseWatchtimeEntity(CoordinatorEntity[TwitchWatchtimeCoordinator]):
     def __init__(self, coordinator: TwitchWatchtimeCoordinator, entry: ConfigEntry, key: str, name: str) -> None:
         super().__init__(coordinator)
         self._entry = entry
-        # Platform-scoped unique_id: includes platform and user from coordinator
-        platform = coordinator._platform
-        user = coordinator._user or "all_accounts"
-        self._attr_unique_id = f"{platform}_{user}_{key}"
+        self._attr_unique_id = f"{entry.entry_id}_{key}"
         self._attr_name = name
         self._attr_device_info = _device_info(entry)
 
