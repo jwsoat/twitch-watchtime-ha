@@ -82,7 +82,7 @@ def _device_info(entry: ConfigEntry) -> DeviceInfo:
 
 
 class _BaseWatchtimeEntity(CoordinatorEntity[TwitchWatchtimeCoordinator]):
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
 
     def __init__(self, coordinator: TwitchWatchtimeCoordinator, entry: ConfigEntry, key: str, name: str) -> None:
         super().__init__(coordinator)
