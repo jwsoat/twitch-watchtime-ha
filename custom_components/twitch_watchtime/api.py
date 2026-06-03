@@ -75,9 +75,10 @@ class TwitchWatchtimeClient:
         data = await self._get("/health", auth=False)
         return bool(data.get("ok"))
 
-    async def async_get_users(self) -> list[dict[str, Any]]:
-        """Return the list of distinct twitch_user values (powers the picker)."""
-        data = await self._get("/stats/users")
+    async def async_get_users(self, *, platform: str | None = None) -> list[dict[str, Any]]:
+        """Return the list of distinct user values for the given platform."""
+        params = {"platform": platform} if platform else None
+        data = await self._get("/stats/users", params=params)
         return list(data.get("users", []))
 
     async def async_get_channel_today(self, *, platform: str, channel: str, user: str | None, window: str = "today") -> int:

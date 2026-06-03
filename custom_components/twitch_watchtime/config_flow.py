@@ -63,7 +63,6 @@ class TwitchWatchtimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             client = TwitchWatchtimeClient(host=host, api_key=api_key, session=session)
             try:
                 await client.async_check_health()
-                self._users = await client.async_get_users()
             except TwitchWatchtimeAuthError:
                 errors["base"] = "invalid_auth"
             except TwitchWatchtimeConnectionError:
@@ -114,6 +113,13 @@ class TwitchWatchtimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_USER: chosen,
                 },
             )
+
+        # Fetch users for the selected platform
+        session = async_get_clientsession(self.hass)
+        client = TwitchWatchtimeClient(
+            host=self._host, api_key=self._api_key, session=session
+        )
+        self._users = await client.async_get_users(platform=self._platform)
 
         # Build the dropdown: All accounts + each known user
         options: dict[str, str] = {USER_ALL: "All accounts"}
