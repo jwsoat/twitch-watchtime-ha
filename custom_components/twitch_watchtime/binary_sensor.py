@@ -30,7 +30,7 @@ class WatchtimeActiveBinarySensor(
     CoordinatorEntity[TwitchWatchtimeCoordinator], BinarySensorEntity
 ):
     _attr_has_entity_name = True
-    _attr_name = "Watchtime active"
+    _attr_name = "Active"
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_icon = "mdi:circle-medium"
 

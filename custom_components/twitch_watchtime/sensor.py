@@ -45,26 +45,26 @@ async def async_setup_entry(
 ) -> None:
     coordinator: TwitchWatchtimeCoordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     entities: list = [
-        WatchtimeDurationSensor(coordinator, entry, "today", "Watchtime today"),
-        WatchtimeDurationSensor(coordinator, entry, "week", "Watchtime last 7 days"),
-        WatchtimeDurationSensor(coordinator, entry, "month", "Watchtime last 30 days"),
-        WatchtimeDurationSensor(coordinator, entry, "all", "Watchtime all"),
+        WatchtimeDurationSensor(coordinator, entry, "today", "Today"),
+        WatchtimeDurationSensor(coordinator, entry, "week", "Last 7 days"),
+        WatchtimeDurationSensor(coordinator, entry, "month", "Last 30 days"),
+        WatchtimeDurationSensor(coordinator, entry, "all", "All time"),
         WatchtimeNowWatchingSensor(coordinator, entry),
         WatchtimeNowCategorySensor(coordinator, entry),
-        WatchtimeTopChannelSensor(coordinator, entry, "today", "Top Channel Daily"),
-        WatchtimeTopChannelSensor(coordinator, entry, "week", "Top Channel Last 7 Days"),
-        WatchtimeTopChannelSensor(coordinator, entry, "month", "Top Channel Last 30 Days"),
-        WatchtimeTopChannelSensor(coordinator, entry, "all", "Top Channel All Time"),
-        WatchtimeTopCategorySensor(coordinator, entry, "today", "Watchtime top category today"),
-        WatchtimeTopCategorySensor(coordinator, entry, "week", "Watchtime top category last 7 days"),
-        WatchtimeTopCategorySensor(coordinator, entry, "month", "Watchtime top category last 30 days"),
-        WatchtimeTopCategorySensor(coordinator, entry, "all", "Watchtime top category all"),
+        WatchtimeTopChannelSensor(coordinator, entry, "today", "Top channel daily"),
+        WatchtimeTopChannelSensor(coordinator, entry, "week", "Top channel last 7 days"),
+        WatchtimeTopChannelSensor(coordinator, entry, "month", "Top channel last 30 days"),
+        WatchtimeTopChannelSensor(coordinator, entry, "all", "Top channel all time"),
+        WatchtimeTopCategorySensor(coordinator, entry, "today", "Top category daily"),
+        WatchtimeTopCategorySensor(coordinator, entry, "week", "Top category last 7 days"),
+        WatchtimeTopCategorySensor(coordinator, entry, "month", "Top category last 30 days"),
+        WatchtimeTopCategorySensor(coordinator, entry, "all", "Top category all time"),
     ]
     entities += [
         WatchtimeCurrentChannelTodaySensor(coordinator, entry),
-        WatchtimeCurrentChannelWindowSensor(coordinator, entry, "week", "now_channel_week_seconds", "Watchtime current channel last 7 days"),
-        WatchtimeCurrentChannelWindowSensor(coordinator, entry, "month", "now_channel_month_seconds", "Watchtime current channel last 30 days"),
-        WatchtimeCurrentChannelWindowSensor(coordinator, entry, "all", "now_channel_all_seconds", "Watchtime current channel all time"),
+        WatchtimeCurrentChannelWindowSensor(coordinator, entry, "week", "now_channel_week_seconds", "Current channel last 7 days"),
+        WatchtimeCurrentChannelWindowSensor(coordinator, entry, "month", "now_channel_month_seconds", "Current channel last 30 days"),
+        WatchtimeCurrentChannelWindowSensor(coordinator, entry, "all", "now_channel_all_seconds", "Current channel all time"),
     ]
     async_add_entities(entities)
 
@@ -131,7 +131,7 @@ class WatchtimeNowWatchingSensor(_BaseWatchtimeEntity, SensorEntity):
     _attr_icon = "mdi:television-play"
 
     def __init__(self, coordinator: TwitchWatchtimeCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator, entry, "now_watching", "Watchtime now watching")
+        super().__init__(coordinator, entry, "now_watching", "Now watching")
 
     @property
     def native_value(self) -> str:
@@ -157,7 +157,7 @@ class WatchtimeNowCategorySensor(_BaseWatchtimeEntity, SensorEntity):
     _attr_icon = "mdi:shape"
 
     def __init__(self, coordinator: TwitchWatchtimeCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator, entry, "now_category", "Watchtime now category")
+        super().__init__(coordinator, entry, "now_category", "Now category")
 
     @property
     def native_value(self) -> str:
@@ -183,7 +183,7 @@ class WatchtimeCurrentChannelTodaySensor(_BaseWatchtimeEntity, SensorEntity):
     _attr_icon = "mdi:timer-play-outline"
 
     def __init__(self, coordinator: TwitchWatchtimeCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator, entry, "now_channel_today", "Watchtime current channel today")
+        super().__init__(coordinator, entry, "now_channel_today", "Current channel today")
 
     @property
     def native_value(self) -> str:
